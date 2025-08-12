@@ -7,6 +7,24 @@ doi = "10.60717/041caef8-645a-4dd8-b12d-892ee03084c2"
 headers = {"Accept": "application/metalink4+xml"}
 response = requests.get(f"https://doi.org/{doi}", headers = headers, allow_redirects=True)
 
+def create_file(dir, name, url):
+    dir[name] = url
+
+def create_dir(dir, name):
+    new_directory = new_dir()
+    dir[name] = new_directory
+    return new_directory
+
+def dir_has_item(dir, name):
+    return name in dir
+
+def new_dir():
+    return {}
+
+def change_dir(dir, name):
+    return dir[name]
+
+
 if "application/metalink4+xml" in response.headers.get("Content-Type", ""):
     root = ET.fromstring(response.text)
     ET.indent(root, space="  ", level=0)
@@ -17,28 +35,23 @@ if "application/metalink4+xml" in response.headers.get("Content-Type", ""):
     filenames = [file_elem.attrib['name'] for file_elem in root.findall(".//ml:file", namespaces=ns)]
     
 
-    directory = {}
-    i = 0
-    for file in filenames:
-        before_slash = ""
-        for j, char in enumerate(filenames[i]):
-            if char == "/":
-                directory[before_slash] = {}
-                before_slash = ""
-            before_slash += char
-            
-            if j == len(filenames[i]) - 1:
-                for x in range(j, -1, -1):
-                    if filenames[i][j] == '/':
-                        break
-                    collected += filenames[i][j]
-              
-
-
-        
-        i += 1
+    root = new_dir()
     
-    print(directory)
+    for file in filenames:
+        pe = file.strip("/").split("/")
+
+        current_dir = root
+        for i, item in enumerate(pe):
+            is_dir = i < len(pe)-1
+            if is_dir:
+                if not dir_has_item(current_dir, item):
+                    create_dir(current_dir, item)
+                current_dir = change_dir(current_dir, item)
+
+            else:
+                create_file(current_dir, item, "test")
+    
+    print(root)
 
 else:
     print("No Metalink available")
