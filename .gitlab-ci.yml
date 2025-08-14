@@ -17,11 +17,11 @@
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
 stages:          # List of stages for jobs, and their order of execution
-  - linter
+  - lint
   - test
 
-linting-job:   # This job runs in the test stage.
-  stage: linter
+linting:
+  stage: lint
   image: ghcr.io/karpatkey/pylint310
   script:
     - |
@@ -38,10 +38,13 @@ linting-job:   # This job runs in the test stage.
   rules:
     - when: always
 
-testing-job:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
+unit-testing:
+  stage: test
+  image: python:3.11
+  before_script:
+    # Install dependencies
+    - # pip install -r requirements.txt
+    - pip install pytest
   script:
-    - echo "Linting code... This will take about 10 seconds."
-    - sleep 10
-    - echo "No lint issues found."
-
+    - echo "Running unit testing"
+    - pytest
