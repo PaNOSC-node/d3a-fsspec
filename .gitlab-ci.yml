@@ -16,12 +16,7 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
-stages:          # List of stages for jobs, and their order of execution
-  - lint
-  - test
-
 linting:
-  stage: lint
   image: ghcr.io/karpatkey/pylint310
   script:
     - |
@@ -39,7 +34,6 @@ linting:
     - when: always
 
 unit-testing:
-  stage: test
   image: python:3.11
   before_script:
     # Install dependencies
