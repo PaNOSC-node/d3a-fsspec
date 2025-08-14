@@ -36,11 +36,11 @@ if "application/metalink4+xml" in response.headers.get("Content-Type", ""):
     
 
     root = new_dir()
-    
+    counter = 0
     for file in filenames:
         pe = file.strip("/").split("/")
-
         current_dir = root
+        
         for i, item in enumerate(pe):
             is_dir = i < len(pe)-1
             if is_dir:
@@ -49,9 +49,11 @@ if "application/metalink4+xml" in response.headers.get("Content-Type", ""):
                 current_dir = change_dir(current_dir, item)
 
             else:
-                create_file(current_dir, item, "test")
+                create_file(current_dir, item, urls[counter])
+                counter += 1
     
     print(root)
+   
 
 else:
     print("No Metalink available")
