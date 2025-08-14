@@ -24,17 +24,21 @@ linting-job:   # This job runs in the test stage.
   stage: linter
   image: ghcr.io/karpatkey/pylint310
   script:
-    - echo "Linting the script"
-    - echo "Runing Black..."
-    - black --check .
-    - echo "Running isort..."
-    - isort . --check-only
-    - echo "Running Flake8..."
-    - flake8 .
+    - |
+      set -o pipefail
+      STATUS=0
+      echo "Linting the script"
+      echo "Runing Black..."
+      black --check . || STATUS=1
+      echo "Running isort..."
+      isort . --check-only || STATUS=1
+      echo "Running Flake8..."
+      flake8 . || STATUS=1
+      exit status
   rules:
     - when: always
 
-lint-test-job:   # This job also runs in the test stage.
+testing-job:   # This job also runs in the test stage.
   stage: test    # It can run at the same time as unit-test-job (in parallel).
   script:
     - echo "Linting code... This will take about 10 seconds."
