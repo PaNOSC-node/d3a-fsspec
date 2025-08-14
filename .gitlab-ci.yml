@@ -37,8 +37,9 @@ unit-testing:
   image: python:3.11
   before_script:
     # Install dependencies
-    - pip install -r requests
-    - pip install pytest fsspec xml.etree.ElementTree
+    - pip install --upgrade pip
+    - pip install requests fsspec xml.etree.ElementTree
+    - pip install pytest
   script:
     - echo "Running unit testing"
     - pytest unit_testing.py
