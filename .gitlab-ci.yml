@@ -38,7 +38,7 @@ unit-testing:
   before_script:
     # Install dependencies
     - pip install --upgrade pip
-    - pip install requests fsspec xml.etree.ElementTree
+    - pip install requests fsspec
     - pip install pytest
   script:
     - echo "Running unit testing"
