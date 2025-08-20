@@ -3,6 +3,9 @@ import xml.etree.ElementTree as ET
 import fsspec
 import shlex
 import io
+import os
+import hashlib
+import tempfile
 
 def create_file(dir, name, url):
     dir[name] = url
@@ -56,12 +59,13 @@ def fetch_namespace_from_doi(doi):
 class DOIDictFileSystem(fsspec.AbstractFileSystem):
     protocol = "doi_dict"
 
-    def __init__(self, root_dir, **kwargs):
+    def __init__(self, root_dir, cache_dir=None, **kwargs):
         super().__init__(**kwargs)
-        self.root_dir = root_dir  # nested dict from fetch_namespace_from_doi
+        self.root_dir = root_dir
+        self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
+        os.makedirs(self.cache_dir, exist_ok=True)
 
     def _get_node(self, path):
-        """Navigate through the nested dict to get the node for a path."""
         parts = path.strip("/").split("/") if path.strip("/") else []
         node = self.root_dir
         for part in parts:
@@ -79,6 +83,11 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
             resp = requests.head(node, allow_redirects=True)
             size = int(resp.headers.get("Content-Length", 0))
             return {"name": path, "type": "file", "size": size}
+
+    def _cache_path(self, url):
+            # Hash URL to create stable local filename
+            h = hashlib.sha256(url.encode()).hexdigest()
+            return os.path.join(self.cache_dir, h)
 
     def ls(self, path, detail=True):
         node = self._get_node(path)
@@ -101,10 +110,32 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
         node = self._get_node(path)
         if isinstance(node, dict):
             raise IsADirectoryError(path)
-        # node is a URL → fetch content
-        resp = requests.get(node)
-        resp.raise_for_status()
-        return io.BytesIO(resp.content)
+
+        cache_file = self._cache_path(node)
+        if not os.path.exists(cache_file):
+            # Download and cache
+            resp = requests.get(node, stream=True)
+            resp.raise_for_status()
+            with open(cache_file, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        return open(cache_file, mode)
+    
+    def clear_cache(self):
+        """Delete all cached files."""
+        for f in os.listdir(self.cache_dir):
+            os.remove(os.path.join(self.cache_dir, f))
+
+    def cache_size(self):
+        """Return total size of cache in bytes."""
+        return sum(
+            os.path.getsize(os.path.join(self.cache_dir, f))
+            for f in os.listdir(self.cache_dir)
+        )
+
+    def list_cache(self):
+        """List cached files (hashes only)."""
+        return os.listdir(self.cache_dir)
 
 # Build the directory tree from DOI
 root = fetch_namespace_from_doi("10.60717/041caef8-645a-4dd8-b12d-892ee03084c2")
@@ -165,9 +196,9 @@ def doi_shell(fs):
                     except Exception as e:
                         print("Error:", e)
             
-            elif cmd == "info":
+            elif cmd == "inf":
                 if not args:
-                    print("Usage: info <path>")
+                    print("Usage: inf <path>")
                 else:
                     path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
                     try:
@@ -189,8 +220,39 @@ def doi_shell(fs):
                     except Exception as e:
                         print("Error:", e)
 
+            elif cmd == "get":
+                if len(args) < 1:
+                    print("Usage: get <remote-path> [local-path]")
+                else:
+                    remote_path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    local_path = args[1] if len(args) > 1 else os.path.basename(remote_path)
+                    try:
+                        with fs.open(remote_path, "rb") as fsrc, open(local_path, "wb") as fdst:
+                            fdst.write(fsrc.read())
+                        print(f"Downloaded {remote_path} → {local_path}")
+                    except Exception as e:
+                        print("Error:", e)
+            
+            elif cmd == "cache":
+                if not args:
+                    print("Usage: cache <info|list|clear>")
+                else:
+                    subcmd = args[0]
+                    if subcmd == "info":
+                        print(f"Cache dir: {fs.cache_dir}")
+                        print(f"Cache size: {fs.cache_size()} bytes")
+                    elif subcmd == "list":
+                        print("Cached files:")
+                        for f in fs.list_cache():
+                            print(" ", f)
+                    elif subcmd == "clear":
+                        fs.clear_cache()
+                        print("Cache cleared")
+                    else:
+                        print("Unknown cache subcommand. Use: info, list, clear")
+
             else:
-                print("Commands: ls, cd, pwd, cat, head, info, exit")
+                print("Commands: ls, cd, pwd, cat, head, inf, get, cache, exit")
 
         except (KeyboardInterrupt, EOFError):
             print()

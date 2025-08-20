@@ -1,0 +1,117 @@
+# # ORSO reflectivity data file | 1.1 standard | YAML encoding | https://www.reflectometry.org/
+# # Grazing incidence off‐specular diffuse scattering measurement from liquid surfaces at fixed incident angle: a new method to extract specular reflectivity | 2024-02-29 | water | R(Qz) 
+# license: CC-BY
+# data_source:
+#   owner:
+#     name: null
+#     affiliation: null
+#     owner: Chen Shen
+#     contactEmail: chen.shen@desy.de
+#     description: water reflectivity measured by specular reflectometry
+#     datasetName: water reflectivity
+#     principalInvestigator: Chen Shen
+#     creationLocation: Brookhaven National Laboratory / National Synchrotron Light
+#       Source II / 12ID-SMI / Open Platform Liquid Surfaces (OPLS)
+#     type: raw
+#     creationTime: '2024-10-16T12:42:49'
+#     ownerGroup: ingestor
+#     sourceFolder: /OpenPortal/public-data/ChenShen-Grazingincidenceoffspeculardiffusescatteringmeasurementfromliquidsurfacesatfixedincidentangleanewmethodtoextractspecularreflectivity-3532648465850078741
+#     isPublished: true
+#   experiment:
+#     title: "Grazing incidence off\u2010specular diffuse scattering measurement from\
+#       \ liquid surfaces at fixed incident angle: a new method to extract specular\
+#       \ reflectivity"
+#     instrument: 12ID-SMI / OPLS
+#     start_date: 2024-02-29T00:00:00
+#     probe: x-ray
+#     facility: National Synchrotron Light Source II
+#     proposalID: '314182'
+#   sample:
+#     name: water
+#     category: vapour / water
+#     composition: H2O
+#     description: MilliQ water ;  superphase is flushed with helium until 0.6% O2 (active
+#       flushing feedback); trough cleaned with 3x MilliQ water, 3x ethanol, 3x MilliQ
+#       water before filling the water sample; surface cleaned at minimal area with
+#       aspirator and measured at the maximal expansion;
+#     environment:
+#     - customized Kibron G4 Langmuir trough (BNL version)
+#     sample_parameters: 73mN/m, 293K
+#   measurement:
+#     instrument_settings:
+#       incident_angle: {magnitude: 0 to 3, unit: deg}
+#       wavelength: {magnitude: 0.861, unit: Angstrom}
+#       polarization: other
+#       configuration: s-polarisation; single crystal beam tilter; details see 10.1107/S1600576724002887
+#     data_files: []
+#     scheme: angle-dispersive
+# reduction:
+#   software: {name: null}
+# data_set: 0
+# columns:
+# - {name: Qz, unit: 1/angstrom, physical_quantity: Normal momentum transfer}
+# - {name: R, unit: '1', physical_quantity: Reflectivity}
+# - {error_of: R, error_type: uncertainty, value_is: sigma}
+# - {error_of: Qz, error_type: resolution, value_is: sigma}
+# # Qz (1/angstrom)    R (1)                  sR                     sQz                   
+7.6424551822712999e-03 9.7581149983518078e-01 1.1533649127384001e-03 nan                   
+1.0189774039781800e-02 9.9604941852265716e-01 1.1611262277863000e-03 nan                   
+1.2737092586894099e-02 9.9677921169176165e-01 1.1596595664866999e-03 nan                   
+1.5284410746012301e-02 9.9774970690656639e-01 1.1611525368000000e-03 nan                   
+1.7831728439540801e-02 9.9518030736018859e-01 1.1564454370659001e-03 nan                   
+2.0379045589883699e-02 9.6366185608182597e-01 1.1364505343543999e-03 nan                   
+2.2926362119445501e-02 2.2137943154189410e-01 5.4413346719390002e-04 nan                   
+2.5473677950630200e-02 8.7797191375119196e-02 3.4301795792739999e-04 nan                   
+2.8020993005842501e-02 4.5640238342913100e-02 2.4714486454990002e-04 nan                   
+3.0568307207486399e-02 2.7530341107175098e-02 1.9231776366289999e-04 nan                   
+3.3115620477966498e-02 1.7962651383924100e-02 1.5537669930400000e-04 nan                   
+3.0568307207486399e-02 2.7701267147970401e-02 5.1513017063729362e-05 nan                   
+3.5662932739687001e-02 1.2387415351749399e-02 3.4507475317935449e-05 nan                   
+4.0757553926467502e-02 6.4902050162641998e-03 2.4954389583224359e-05 nan                   
+4.5852170147063602e-02 3.7949078870378999e-03 1.9109014222795640e-05 nan                   
+5.0946780780711902e-02 2.3643203013690999e-03 1.5022537448585500e-05 nan                   
+5.6038897608447900e-02 1.5552842008122001e-03 1.2165516559868012e-05 nan                   
+5.0946780780711902e-02 2.3705036104229998e-03 4.0577014615161516e-06 nan                   
+6.1133495209398397e-02 1.0776091560458999e-03 2.7213999410988864e-06 nan                   
+7.1322667443746199e-02 5.5389293858290004e-04 1.9562175074225158e-06 nan                   
+8.1511804916292299e-02 3.1236270340970001e-04 1.4644107750694272e-06 nan                   
+9.1700902660974901e-02 1.8898507688669999e-04 1.1373708563851675e-06 nan                   
+1.0188995571175150e-01 1.2263732346709999e-04 9.1385615331831797e-07 nan                   
+1.1207895910260150e-01 8.1686022142830596e-05 7.4100945323559572e-07 nan                   
+1.0188995571175150e-01 1.2227507291479999e-04 1.5404572984828910e-07 nan                   
+1.1207895910260150e-01 8.1492556012483354e-05 1.2524720820021373e-07 nan                   
+1.2226790786752829e-01 5.6095786328370233e-05 1.0372306654974808e-07 nan                   
+1.3245679704056229e-01 3.9721974571875547e-05 8.7121709351912921e-08 nan                   
+1.4264562165576239e-01 2.8790399887490672e-05 7.4058993613012623e-08 nan                   
+1.5283437674721939e-01 2.1158063965493800e-05 6.3295789301235914e-08 nan                   
+1.6302305734905781e-01 1.5831796824485586e-05 5.4696167965482073e-08 nan                   
+1.7321165849543860e-01 1.2059651751934236e-05 4.7757983102644585e-08 nan                   
+1.6302305734905781e-01 1.5718513592290991e-05 1.4576615913012508e-08 nan                   
+1.8085305422533909e-01 9.8378299581942108e-06 1.1530201740160910e-08 nan                   
+1.9868278115579940e-01 6.3655490120610243e-06 9.2851682456752582e-09 nan                   
+2.1651221152733929e-01 4.2342223160907461e-06 7.5730576497029863e-09 nan                   
+2.3434131872730241e-01 2.8943086891238384e-06 6.2685023389135728e-09 nan                   
+2.5217007614351461e-01 1.9965043959455228e-06 5.2394224459910713e-09 nan                   
+2.6999845716432369e-01 1.4042337415375478e-06 4.4429890742114230e-09 nan                   
+2.8782643517863948e-01 1.0159723330260001e-06 3.7922142296732125e-09 nan                   
+3.0565398357597290e-01 7.2336018098864098e-07 3.1782478897974960e-09 nan                   
+2.8018592422704741e-01 1.1638914428245517e-06 6.2663745065567808e-10 nan                   
+3.0565398357597290e-01 7.2655382101828505e-07 4.9556508008003580e-10 nan                   
+3.3112111184985660e-01 4.6608662398317167e-07 3.9993864053467280e-10 nan                   
+3.5658723147140903e-01 3.0367622185797289e-07 3.2830061535471045e-10 nan                   
+3.8205226486641330e-01 1.9929181313057949e-07 2.7396180484337359e-10 nan                   
+4.0751613446396168e-01 1.3332399417809801e-07 2.3137574394050757e-10 nan                   
+4.3297876269669089e-01 8.8844575400082148e-08 1.9917490176817924e-10 nan                   
+4.5844007200101999e-01 5.9837642506511589e-08 1.7651932992220722e-10 nan                   
+4.8389998481738500e-01 4.0425410495475362e-08 1.5530972906470674e-10 nan                   
+5.0935842359047612e-01 2.7552540334619262e-08 1.3509948358481591e-10 nan                   
+5.3481531076947364e-01 1.8904364673129237e-08 1.2123862719144255e-10 nan                   
+5.6027056880828430e-01 1.2970284698052949e-08 1.1145553894853974e-10 nan                   
+5.8572412016577780e-01 8.8642808400242136e-09 1.0446836919127704e-10 nan                   
+6.1117588730602213e-01 5.8819528254999203e-09 9.9559735390703678e-11 nan                   
+6.3662579269852104e-01 4.1658876533393931e-09 6.8753662589004388e-11 nan                   
+6.6207375881844877e-01 2.9087689008973236e-09 6.7554357065919836e-11 nan                   
+6.8751970814688723e-01 1.9679262029798630e-09 6.6755100864385477e-11 nan                   
+7.1296356317106158e-01 1.2865403267185208e-09 6.6351473362512420e-11 nan                   
+7.3840524638457739e-01 8.7063143054197751e-10 6.6170290785664859e-11 nan                   
+7.6384468028765495e-01 5.6667180925482604e-10 6.6320880905118243e-11 nan                   
