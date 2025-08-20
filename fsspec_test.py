@@ -1,6 +1,7 @@
 import requests
 import xml.etree.ElementTree as ET
 import fsspec
+import shlex
 import io
 
 def create_file(dir, name, url):
@@ -111,10 +112,89 @@ root = fetch_namespace_from_doi("10.60717/041caef8-645a-4dd8-b12d-892ee03084c2")
 # Create FS object
 fs = DOIDictFileSystem(root)
 
-# List files
-print(fs.info("ChenShen-Grazingincidenceoffspeculardiffusescatteringmeasurementfromliquidsurfacesatfixedincidentangleanewmethodtoextractspecularreflectivity-3532648465850078741/reflectivity.ort"))
 
-# Open a file and read content
-# with fs.open("ChenShen-Grazingincidenceoffspeculardiffusescatteringmeasurementfromliquidsurfacesatfixedincidentangleanewmethodtoextractspecularreflectivity-3532648465850078741/reflectivity.ort", "rb") as f:
-    #print(f.read(1000))  # first 100 bytes
+def doi_shell(fs):
+    cwd = ""  # current working directory
 
+    while True:
+        try:
+            cmdline = input(f"doi:{cwd or '/'}$ ")
+            parts = shlex.split(cmdline)  # handles quoted filenames
+            if not parts:
+                continue
+            cmd, *args = parts
+
+            if cmd == "exit" or cmd == "quit":
+                break
+
+            elif cmd == "ls":
+                path = args[0] if args else cwd
+                try:
+                    items = fs.ls(path)
+                    for item in items:
+                        info = fs.info(item["name"])
+                        print(item["name"].split("/")[-1], " -  size:", info["size"], "bytes")
+                except Exception as e:
+                    print("Error:", e)
+
+            elif cmd == "cd":
+                if not args:
+                    cwd = ""
+                else:
+                    new_path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    try:
+                        info = fs.info(new_path)
+                        if info["type"] != "directory":
+                            print("Not a directory:", new_path)
+                        else:
+                            cwd = new_path
+                    except Exception as e:
+                        print("Error:", e)
+
+            elif cmd == "pwd":
+                print("/" + cwd if cwd else "/")
+
+            elif cmd == "cat":
+                if not args:
+                    print("Usage: cat <filename>")
+                else:
+                    path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    try:
+                        with fs.open(path, "rb") as f:
+                            print(f.read().decode(errors="replace"))
+                    except Exception as e:
+                        print("Error:", e)
+            
+            elif cmd == "info":
+                if not args:
+                    print("Usage: info <path>")
+                else:
+                    path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    try:
+                        info = fs.info(path)
+                        print(f"Path: {path}")
+                        print(f"Type: {info['type']}")
+                        print(f"Size: {info['size']} bytes")
+                    except Exception as e:
+                        print("Error:", e)
+
+            elif cmd == "head":
+                if not args:
+                    print("Usage: head <filename>")
+                else:
+                    path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    try:
+                        with fs.open(path, "rb") as f:
+                            print(f.read(500).decode(errors="replace"))  # first 500 bytes
+                    except Exception as e:
+                        print("Error:", e)
+
+            else:
+                print("Commands: ls, cd, pwd, cat, head, info, exit")
+
+        except (KeyboardInterrupt, EOFError):
+            print()
+            break
+
+
+doi_shell(fs)
