@@ -2,7 +2,13 @@ import requests
 import xml.etree.ElementTree as ET
 import fsspec
 import shlex
-import io
+from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit.shortcuts import print_formatted_text
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completer, Completion
+import os
+import hashlib
+import tempfile
 
 def create_file(dir, name, url):
     dir[name] = url
@@ -56,12 +62,13 @@ def fetch_namespace_from_doi(doi):
 class DOIDictFileSystem(fsspec.AbstractFileSystem):
     protocol = "doi_dict"
 
-    def __init__(self, root_dir, **kwargs):
+    def __init__(self, root_dir, cache_dir=None, **kwargs):
         super().__init__(**kwargs)
-        self.root_dir = root_dir  # nested dict from fetch_namespace_from_doi
+        self.root_dir = root_dir
+        self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
+        os.makedirs(self.cache_dir, exist_ok=True)
 
     def _get_node(self, path):
-        """Navigate through the nested dict to get the node for a path."""
         parts = path.strip("/").split("/") if path.strip("/") else []
         node = self.root_dir
         for part in parts:
@@ -79,6 +86,11 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
             resp = requests.head(node, allow_redirects=True)
             size = int(resp.headers.get("Content-Length", 0))
             return {"name": path, "type": "file", "size": size}
+
+    def _cache_path(self, url):
+            # Hash URL to create stable local filename
+            h = hashlib.sha256(url.encode()).hexdigest()
+            return os.path.join(self.cache_dir, h)
 
     def ls(self, path, detail=True):
         node = self._get_node(path)
@@ -101,75 +113,159 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
         node = self._get_node(path)
         if isinstance(node, dict):
             raise IsADirectoryError(path)
-        # node is a URL → fetch content
-        resp = requests.get(node)
-        resp.raise_for_status()
-        return io.BytesIO(resp.content)
+
+        cache_file = self._cache_path(node)
+        if not os.path.exists(cache_file):
+            # Download and cache
+            resp = requests.get(node, stream=True)
+            resp.raise_for_status()
+            with open(cache_file, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        return open(cache_file, mode)
+    
+    def clear_cache(self):
+        """Delete all cached files."""
+        for f in os.listdir(self.cache_dir):
+            os.remove(os.path.join(self.cache_dir, f))
+
+    def cache_size(self):
+        """Return total size of cache in bytes."""
+        return sum(
+            os.path.getsize(os.path.join(self.cache_dir, f))
+            for f in os.listdir(self.cache_dir)
+        )
+
+    def list_cache(self):
+        """List cached files (hashes only)."""
+        return os.listdir(self.cache_dir)
 
 # Build the directory tree from DOI
-root = fetch_namespace_from_doi("10.60717/041caef8-645a-4dd8-b12d-892ee03084c2")
+DOI = input("Please enter the DOI: ")
+root = fetch_namespace_from_doi(DOI)
 
 # Create FS object
 fs = DOIDictFileSystem(root)
 
 
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completer, Completion
+import os
+
+class DOICompleter(Completer):
+    def __init__(self, fs, cwd_ref):
+        """
+        fs: your DOIDictFileSystem
+        cwd_ref: a reference (list or dict) holding the current working directory string
+                 so we can update it dynamically in REPL
+        """
+        self.fs = fs
+        self.cwd_ref = cwd_ref
+
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor.strip()
+        parts = text.split()
+        if not parts:
+            return
+
+        cmd = parts[0]
+        arg = parts[-1] if len(parts) > 1 else ""
+
+        # Only complete on commands that expect paths
+        if cmd in ("ls", "cd", "cat", "head", "info", "get"):
+            cwd = self.cwd_ref[0]  # current working directory
+            base_dir = cwd
+
+            if "/" in arg:
+                base_dir, prefix = arg.rsplit("/", 1)
+                base_dir = base_dir.strip("/")
+            else:
+                prefix = arg
+
+            try:
+                items = self.fs.ls(base_dir)
+            except Exception:
+                return
+
+            for item in items:
+                name = item["name"].split("/")[-1]
+                if name.startswith(prefix):
+                    yield Completion(name, start_position=-len(prefix))
+
+
 def doi_shell(fs):
-    cwd = ""  # current working directory
+    cwd = [""]
+    session = PromptSession(completer=DOICompleter(fs, cwd))
 
     while True:
         try:
-            cmdline = input(f"doi:{cwd or '/'}$ ")
-            parts = shlex.split(cmdline)  # handles quoted filenames
+            cmdline = session.prompt(f"doi:/{cwd[0] or ''}$ ")
+            parts = cmdline.strip().split()
             if not parts:
                 continue
             cmd, *args = parts
 
-            if cmd == "exit" or cmd == "quit":
+            if cmd in ("exit", "quit"):
                 break
 
+            elif cmd == "pwd":
+                print("/" + cwd[0] if cwd[0] else "/")
+
             elif cmd == "ls":
-                path = args[0] if args else cwd
+                path = args[0] if args else cwd[0]
                 try:
                     items = fs.ls(path)
                     for item in items:
-                        info = fs.info(item["name"])
-                        print(item["name"].split("/")[-1], " -  size:", info["size"], "bytes")
+                        name = item["name"].split("/")[-1]
+                        if item["type"] == "directory":
+                            text = FormattedText([("ansiblue", name)])   # blue for dirs
+                        else:
+                            text = FormattedText([("ansigreen", name)])  # green for files
+                        print_formatted_text(text)
                 except Exception as e:
                     print("Error:", e)
 
             elif cmd == "cd":
                 if not args:
-                    cwd = ""
+                    cwd[0] = ""
                 else:
-                    new_path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    new_path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
                     try:
                         info = fs.info(new_path)
-                        if info["type"] != "directory":
-                            print("Not a directory:", new_path)
+                        if info["type"] == "directory":
+                            cwd[0] = new_path
                         else:
-                            cwd = new_path
+                            print("Not a directory:", new_path)
                     except Exception as e:
                         print("Error:", e)
-
-            elif cmd == "pwd":
-                print("/" + cwd if cwd else "/")
 
             elif cmd == "cat":
                 if not args:
                     print("Usage: cat <filename>")
                 else:
-                    path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
                     try:
                         with fs.open(path, "rb") as f:
                             print(f.read().decode(errors="replace"))
                     except Exception as e:
                         print("Error:", e)
-            
+
+            elif cmd == "head":
+                if not args or info["type"] == "directory":
+                    print("Usage: head <filename>")
+                else:
+                    path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
+                    try:
+                        with fs.open(path, "rb") as f:
+                            print(f.read(500).decode(errors="replace"))
+                    except Exception as e:
+                        print("Error:", e)
+
             elif cmd == "info":
                 if not args:
                     print("Usage: info <path>")
                 else:
-                    path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
                     try:
                         info = fs.info(path)
                         print(f"Path: {path}")
@@ -178,19 +274,39 @@ def doi_shell(fs):
                     except Exception as e:
                         print("Error:", e)
 
-            elif cmd == "head":
+            elif cmd == "get":
                 if not args:
-                    print("Usage: head <filename>")
+                    print("Usage: get <remote-path> [local-path]")
                 else:
-                    path = args[0] if args[0].startswith("/") else f"{cwd}/{args[0]}".strip("/")
+                    remote_path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
+                    local_path = args[1] if len(args) > 1 else os.path.basename(remote_path)
                     try:
-                        with fs.open(path, "rb") as f:
-                            print(f.read(500).decode(errors="replace"))  # first 500 bytes
+                        with fs.open(remote_path, "rb") as fsrc, open(local_path, "wb") as fdst:
+                            fdst.write(fsrc.read())
+                        print(f"Downloaded {remote_path} → {local_path}")
                     except Exception as e:
                         print("Error:", e)
 
+            elif cmd == "cache":
+                if not args:
+                    print("Usage: cache <info|list|clear>")
+                else:
+                    subcmd = args[0]
+                    if subcmd == "info":
+                        print(f"Cache dir: {fs.cache_dir}")
+                        print(f"Cache size: {fs.cache_size()} bytes")
+                    elif subcmd == "list":
+                        print("Cached files:")
+                        for f in fs.list_cache():
+                            print(" ", f)
+                    elif subcmd == "clear":
+                        fs.clear_cache()
+                        print("Cache cleared")
+                    else:
+                        print("Unknown cache subcommand")
+
             else:
-                print("Commands: ls, cd, pwd, cat, head, info, exit")
+                print("Commands: ls, cd, pwd, cat, head, info, get, cache, exit")
 
         except (KeyboardInterrupt, EOFError):
             print()
