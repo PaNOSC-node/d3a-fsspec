@@ -23,7 +23,7 @@ linting:
       set -o pipefail
       STATUS=0
       echo "Linting the script"
-      echo "Runing Black..."
+      echo "Running Black..."
       black --check . || STATUS=1
       echo "Running isort..."
       isort . --check-only || STATUS=1
