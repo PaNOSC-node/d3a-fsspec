@@ -1,7 +1,6 @@
 import requests
 import xml.etree.ElementTree as ET
 import fsspec
-import shlex
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit import PromptSession
@@ -10,22 +9,28 @@ import os
 import hashlib
 import tempfile
 
+
 def create_file(dir, name, url):
     dir[name] = url
+
 
 def create_dir(dir, name):
     new_directory = new_dir()
     dir[name] = new_directory
     return new_directory
 
+
 def dir_has_item(dir, name):
     return name in dir
+
 
 def new_dir():
     return {}
 
+
 def change_dir(dir, name):
     return dir[name]
+
 
 def fetch_namespace_from_doi(doi):
     headers = {"Accept": "application/metalink4+xml"}
@@ -59,6 +64,7 @@ def fetch_namespace_from_doi(doi):
 
     return root_dir
 
+
 class DOIDictFileSystem(fsspec.AbstractFileSystem):
     protocol = "doi_dict"
 
@@ -88,9 +94,9 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
             return {"name": path, "type": "file", "size": size}
 
     def _cache_path(self, url):
-            # Hash URL to create stable local filename
-            h = hashlib.sha256(url.encode()).hexdigest()
-            return os.path.join(self.cache_dir, h)
+        # Hash URL to create stable local filename
+        h = hashlib.sha256(url.encode()).hexdigest()
+        return os.path.join(self.cache_dir, h)
 
     def ls(self, path, detail=True):
         node = self._get_node(path)
@@ -140,6 +146,7 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
         """List cached files (hashes only)."""
         return os.listdir(self.cache_dir)
 
+
 # Build the directory tree from DOI
 DOI = input("Please enter the DOI: ")
 root = fetch_namespace_from_doi(DOI)
@@ -147,10 +154,6 @@ root = fetch_namespace_from_doi(DOI)
 # Create FS object
 fs = DOIDictFileSystem(root)
 
-
-from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completer, Completion
-import os
 
 class DOICompleter(Completer):
     def __init__(self, fs, cwd_ref):
@@ -218,9 +221,9 @@ def doi_shell(fs):
                     for item in items:
                         name = item["name"].split("/")[-1]
                         if item["type"] == "directory":
-                            text = FormattedText([("ansiblue", name)])   # blue for dirs
+                            text = FormattedText([("ansiblue", name)])
                         else:
-                            text = FormattedText([("ansigreen", name)])  # green for files
+                            text = FormattedText([("ansigreen", name)])
                         print_formatted_text(text)
                 except Exception as e:
                     print("Error:", e)
@@ -251,7 +254,7 @@ def doi_shell(fs):
                         print("Error:", e)
 
             elif cmd == "head":
-                if not args or info["type"] == "directory":
+                if not args or info["type"] == "file":
                     print("Usage: head <filename>")
                 else:
                     path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
