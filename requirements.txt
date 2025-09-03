@@ -1,0 +1,7 @@
+requests
+xml
+fsspec
+os
+hashlib
+tempfile
+prompt_toolkit
