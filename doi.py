@@ -4,23 +4,30 @@ import fsspec
 import os
 import hashlib
 import tempfile
+from fsspec.registry import register_implementation
+
 
 def create_file(dir, name, url):
     dir[name] = url
+
 
 def create_dir(dir, name):
     new_directory = new_dir()
     dir[name] = new_directory
     return new_directory
 
+
 def dir_has_item(dir, name):
     return name in dir
+
 
 def new_dir():
     return {}
 
+
 def change_dir(dir, name):
     return dir[name]
+
 
 def fetch_namespace_from_doi(doi):
     headers = {"Accept": "application/metalink4+xml"}
@@ -54,6 +61,7 @@ def fetch_namespace_from_doi(doi):
 
     return root_dir
 
+
 class DOIDictFileSystem(fsspec.AbstractFileSystem):
     protocol = "doi"
 
@@ -64,7 +72,6 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
         self.root_dir = fetch_namespace_from_doi(doi)
         self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
         os.makedirs(self.cache_dir, exist_ok=True)
-
 
     def _get_node(self, path):
         parts = path.strip("/").split("/") if path.strip("/") else []
@@ -86,9 +93,9 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
             return {"name": path, "type": "file", "size": size}
 
     def _cache_path(self, url):
-            # Hash URL to create stable local filename
-            h = hashlib.sha256(url.encode()).hexdigest()
-            return os.path.join(self.cache_dir, h)
+        # Hash URL to create stable local filename
+        h = hashlib.sha256(url.encode()).hexdigest()
+        return os.path.join(self.cache_dir, h)
 
     def ls(self, path, detail=True):
         node = self._get_node(path)
@@ -137,8 +144,6 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
     def list_cache(self):
         """List cached files (hashes only)."""
         return os.listdir(self.cache_dir)
+
     
-
-from fsspec.registry import register_implementation
-
 register_implementation("doi", DOIDictFileSystem)
