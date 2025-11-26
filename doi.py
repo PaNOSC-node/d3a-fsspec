@@ -31,8 +31,10 @@ def change_dir(dir, name):
 
 def fetch_namespace_from_doi(doi):
     headers = {"Accept": "application/metalink4+xml"}
-    response = requests.get(f"https://doi.org/{doi}", headers=headers, allow_redirects=True)
-    
+    response = requests.get(
+        f"https://doi.org/{doi}", headers=headers, allow_redirects=True
+    )
+
     if "application/metalink4+xml" not in response.headers.get("Content-Type", ""):
         raise ValueError("No Metalink available")
 
@@ -128,7 +130,7 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
                 for chunk in resp.iter_content(chunk_size=8192):
                     f.write(chunk)
         return open(cache_file, mode)
-    
+
     def clear_cache(self):
         """Delete all cached files."""
         for f in os.listdir(self.cache_dir):
@@ -145,5 +147,5 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
         """List cached files (hashes only)."""
         return os.listdir(self.cache_dir)
 
-    
+
 register_implementation("doi", DOIDictFileSystem)

@@ -81,7 +81,11 @@ def doi_shell(fs):
                 if not args:
                     cwd[0] = ""
                 else:
-                    new_path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
+                    new_path = (
+                        args[0]
+                        if args[0].startswith("/")
+                        else f"{cwd[0]}/{args[0]}".strip("/")
+                    )
                     try:
                         info = fs.info(new_path)
                         if info["type"] == "directory":
@@ -95,7 +99,11 @@ def doi_shell(fs):
                 if not args:
                     print("Usage: cat <filename>")
                 else:
-                    path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
+                    path = (
+                        args[0]
+                        if args[0].startswith("/")
+                        else f"{cwd[0]}/{args[0]}".strip("/")
+                    )
                     try:
                         with fs.open(path, "rb") as f:
                             print(f.read().decode(errors="replace"))
@@ -106,7 +114,11 @@ def doi_shell(fs):
                 if not args or info["type"] == "file":
                     print("Usage: head <filename>")
                 else:
-                    path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
+                    path = (
+                        args[0]
+                        if args[0].startswith("/")
+                        else f"{cwd[0]}/{args[0]}".strip("/")
+                    )
                     try:
                         with fs.open(path, "rb") as f:
                             print(f.read(500).decode(errors="replace"))
@@ -117,7 +129,11 @@ def doi_shell(fs):
                 if not args:
                     print("Usage: info <path>")
                 else:
-                    path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
+                    path = (
+                        args[0]
+                        if args[0].startswith("/")
+                        else f"{cwd[0]}/{args[0]}".strip("/")
+                    )
                     try:
                         info = fs.info(path)
                         print(f"Path: {path}")
@@ -130,10 +146,18 @@ def doi_shell(fs):
                 if not args:
                     print("Usage: get <remote-path> [local-path]")
                 else:
-                    remote_path = args[0] if args[0].startswith("/") else f"{cwd[0]}/{args[0]}".strip("/")
-                    local_path = args[1] if len(args) > 1 else os.path.basename(remote_path)
+                    remote_path = (
+                        args[0]
+                        if args[0].startswith("/")
+                        else f"{cwd[0]}/{args[0]}".strip("/")
+                    )
+                    local_path = (
+                        args[1] if len(args) > 1 else os.path.basename(remote_path)
+                    )
                     try:
-                        with fs.open(remote_path, "rb") as fsrc, open(local_path, "wb") as fdst:
+                        with fs.open(remote_path, "rb") as fsrc, open(
+                            local_path, "wb"
+                        ) as fdst:
                             fdst.write(fsrc.read())
                         print(f"Downloaded {remote_path} → {local_path}")
                     except Exception as e:
