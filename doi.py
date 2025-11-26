@@ -74,8 +74,7 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
         if doi is None:
             raise ValueError("Must provide a DOI")
         self.root_dir = fetch_namespace_from_doi(doi)
-        self.cache_dir = cache_dir or os.path.join(
-                tempfile.gettempdir(), "doi_cache")
+        self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
         os.makedirs(self.cache_dir, exist_ok=True)
 
     def _get_node(self, path):

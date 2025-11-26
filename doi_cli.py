@@ -154,8 +154,7 @@ def doi_shell(fs):
                         else f"{cwd[0]}/{args[0]}".strip("/")
                     )
                     local_path = (
-                        args[1] if len(args) > 1
-                        else os.path.basename(remote_path)
+                        args[1] if len(args) > 1 else os.path.basename(remote_path)
                     )
                     try:
                         with fs.open(remote_path, "rb") as fsrc, open(
@@ -185,8 +184,10 @@ def doi_shell(fs):
                         print("Unknown cache subcommand")
 
             else:
-                print("Commands: ls, cd, pwd, cat,\
-                        head, info, get, cache, exit")
+                print(
+                    "Commands: ls, cd, pwd, cat,\
+                        head, info, get, cache, exit"
+                )
 
         except (KeyboardInterrupt, EOFError):
             print()
