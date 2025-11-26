@@ -1,11 +1,12 @@
-import fsspec
 import hashlib
 import os
-import requests
 import tempfile
-
 import xml.etree.ElementTree as ET
+
+import fsspec
+import requests
 from fsspec.registry import register_implementation
+
 
 def create_file(dir, name, url):
     dir[name] = url
