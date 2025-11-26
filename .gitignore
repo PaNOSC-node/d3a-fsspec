@@ -1,7 +1,7 @@
 test.py
 reflectivity.ort
 __pycache__/doi.cpython-313.pyc
-__pytcache__/
-__pytcache__/*
+__pycache__/
+__pycache__/*
 venv_doi/
 venv_doi/*
