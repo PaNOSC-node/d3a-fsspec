@@ -31,12 +31,13 @@ def change_dir(dir, name):
 
 
 def fetch_namespace_from_doi(doi):
-    headers = {"Accept": "application/metalink4+xml"}
+    accept_str = "application/metalink4+xml"
+    headers = {"Accept": accept_str}
     response = requests.get(
         f"https://doi.org/{doi}", headers=headers, allow_redirects=True
     )
 
-    if "application/metalink4+xml" not in response.headers.get("Content-Type", ""):
+    if accept_str not in response.headers.get("Content-Type", ""):
         raise ValueError("No Metalink available")
 
     root_xml = ET.fromstring(response.text)
@@ -73,7 +74,8 @@ class DOIDictFileSystem(fsspec.AbstractFileSystem):
         if doi is None:
             raise ValueError("Must provide a DOI")
         self.root_dir = fetch_namespace_from_doi(doi)
-        self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
+        self.cache_dir = cache_dir or os.path.join(
+                tempfile.gettempdir(), "doi_cache")
         os.makedirs(self.cache_dir, exist_ok=True)
 
     def _get_node(self, path):
