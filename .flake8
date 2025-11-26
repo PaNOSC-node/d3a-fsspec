@@ -7,4 +7,5 @@ per-file-ignores =
     # line too long
     doi.py: E501,
     doi_cli.py: E501
-
+exclude =
+    /scripts*
