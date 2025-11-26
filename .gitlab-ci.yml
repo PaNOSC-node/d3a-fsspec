@@ -29,7 +29,7 @@ linting:
       isort . --check-only || STATUS=1
       echo "Running Flake8..."
       flake8 . || STATUS=1
-      exit status
+      exit STATUS
   rules:
     - when: always
 
