@@ -1,0 +1,10 @@
+# Source - https://stackoverflow.com/a
+# Posted by Eugene Yarmash, modified by community. See post 'Timeline' for change history
+# Retrieved 2025-11-26, License - CC BY-SA 4.0
+
+[flake8]
+per-file-ignores =
+    # line too long
+    doi.py: E501,
+    doi_cli.py: E501
+
