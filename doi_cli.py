@@ -1,9 +1,10 @@
 import doi
+import os
+
+from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completer, Completion
-import os
 
 # Build the directory tree from DOI
 fs = doi.fsspec.filesystem("doi", doi=input("Please enter the DOI: "))
