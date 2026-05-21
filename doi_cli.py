@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import os
 
 from prompt_toolkit import PromptSession
@@ -8,7 +9,7 @@ from prompt_toolkit.shortcuts import print_formatted_text
 import doi
 
 # Build the directory tree from DOI
-fs = doi.fsspec.filesystem("doi", doi=input("Please enter the DOI: "))
+fs = doi.filesystem("doi", doi=input("Please enter the DOI: "))
 
 
 class DOICompleter(Completer):
