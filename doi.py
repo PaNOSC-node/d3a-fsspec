@@ -40,28 +40,16 @@ class DOIDictFileSystem(AbstractFileSystem):
         # parse XML file and set up namespace
         root_xml = ET.fromstring(response.text)
         ns = {"ml": root_xml.tag.split("}")[0].strip("{")}
+
+        entries={}
         # get all URLs from doc
         for elem in root_xml.findall(".//ml:file", namespaces=ns):
-            print(elem.attrib['name'])
-            urls = [url.text for url in elem.findall(".//ml:url", namespaces=ns)]
-            print(urls)
-        exit(0) 
-
-
-        urls = [url.text for url in root_xml.findall(".//ml:url", namespaces=ns)]
-        # get all filnenames from doc
-        filenames = [
-            file_elem.attrib["name"]
-            for file_elem in root_xml.findall(".//ml:file", namespaces=ns)
-        ]
-        # TODO: this leaves us with two separate lists for URLs and filenames.
-        #       are they guaranteed to have a correspondence or is it conincidence in the docs used for testing?
+            entries[elem.attrib['name']] = [url.text for url in elem.findall(".//ml:url", namespaces=ns)]
 
         # now set up hierarchical dict representing the directory structures
-        # with filenames and corresponding URLs where to find them
+        # with filenames after split paths and corresponding URLs to access them
         root_dir = cls.new_dir()
-        counter = 0
-        for file in filenames:
+        for file in entries.keys():
             parts = file.strip("/").split("/")
             current_dir = root_dir
             for i, item in enumerate(parts):
@@ -71,8 +59,7 @@ class DOIDictFileSystem(AbstractFileSystem):
                         cls.create_dir(current_dir, item)
                     current_dir = cls.change_dir(current_dir, item)
                 else:
-                    cls.create_file(current_dir, item, urls[counter])
-                    counter += 1
+                    cls.create_file(current_dir, item, entries[file][0])
 
         return root_dir
 
