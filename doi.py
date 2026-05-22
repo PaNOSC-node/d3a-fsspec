@@ -12,31 +12,53 @@ class DOIDictFileSystem(AbstractFileSystem):
 
     def __init__(self, doi=None, cache_dir=None, **kwargs):
         super().__init__(**kwargs)
-        if doi is None:
-            raise ValueError("Must provide a DOI")
-        self.root_dir = self.fetch_namespace_from_doi(doi)
+
+        if not doi:
+            raise ValueError("Please provide a DOI.")
+        if not self.doi_is_valid(doi):
+            raise ValueError("Must provide a valid and resolvable DOI.")
+
+        self.root_dir = self.get_directories_from_doi(doi)
         self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
         os.makedirs(self.cache_dir, exist_ok=True)
 
     @classmethod
-    def fetch_namespace_from_doi(cls, doi):
+    def get_directories_from_doi(cls, doi):
+        # prepare request to doi.org
         accept_str = "application/metalink4+xml"
         headers = {"Accept": accept_str}
+        # send request. 
+        # TODO: is this good or do we need another step to prepare and possibly parameterize the URL?
         response = requests.get(
             f"https://doi.org/{doi}", headers=headers, allow_redirects=True
         )
 
+        # check if returned document is a metalink doc
         if accept_str not in response.headers.get("Content-Type", ""):
             raise ValueError("No Metalink available")
 
+        # parse XML file and set up namespace
         root_xml = ET.fromstring(response.text)
         ns = {"ml": root_xml.tag.split("}")[0].strip("{")}
+        # get all URLs from doc
+        for elem in root_xml.findall(".//ml:file", namespaces=ns):
+            print(elem.attrib['name'])
+            urls = [url.text for url in elem.findall(".//ml:url", namespaces=ns)]
+            print(urls)
+        exit(0) 
+
+
         urls = [url.text for url in root_xml.findall(".//ml:url", namespaces=ns)]
+        # get all filnenames from doc
         filenames = [
             file_elem.attrib["name"]
             for file_elem in root_xml.findall(".//ml:file", namespaces=ns)
         ]
+        # TODO: this leaves us with two separate lists for URLs and filenames.
+        #       are they guaranteed to have a correspondence or is it conincidence in the docs used for testing?
 
+        # now set up hierarchical dict representing the directory structures
+        # with filenames and corresponding URLs where to find them
         root_dir = cls.new_dir()
         counter = 0
         for file in filenames:
@@ -53,6 +75,15 @@ class DOIDictFileSystem(AbstractFileSystem):
                     counter += 1
 
         return root_dir
+
+    @staticmethod
+    def doi_is_valid(doi):
+        url = f"https://doi.org/{doi}"
+        resp = requests.get(url)
+        if resp.status_code < 400:
+            return True
+        else:
+            return False
 
     @staticmethod
     def create_file(dir, name, url):
