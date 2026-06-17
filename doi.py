@@ -27,7 +27,7 @@ class DOIDictFileSystem(AbstractFileSystem):
         # prepare request to doi.org
         accept_str = "application/metalink4+xml"
         headers = {"Accept": accept_str}
-        # send request. 
+        # send request.
         # TODO: is this good or do we need another step to prepare and possibly parameterize the URL?
         response = requests.get(
             f"https://doi.org/{doi}", headers=headers, allow_redirects=True
