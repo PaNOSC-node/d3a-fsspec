@@ -67,10 +67,7 @@ class DOIDictFileSystem(AbstractFileSystem):
     def doi_is_valid(doi):
         url = f"https://doi.org/{doi}"
         resp = requests.get(url)
-        if resp.status_code < 400:
-            return True
-        else:
-            return False
+        return resp.ok
 
     @staticmethod
     def create_file(dir, name, url):
