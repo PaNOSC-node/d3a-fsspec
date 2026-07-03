@@ -46,7 +46,9 @@ class DOIDictFileSystem(AbstractFileSystem):
         entries = {}
         # get all URLs from doc
         for elem in root_xml.findall(".//ml:file", namespaces=ns):
-            entries[elem.attrib['name']] = [url.text for url in elem.findall(".//ml:url", namespaces=ns)]
+            entries[elem.attrib["name"]] = [
+                url.text for url in elem.findall(".//ml:url", namespaces=ns)
+            ]
 
         # now set up hierarchical dict representing the directory structures
         # with filenames after split paths and corresponding URLs to access them
@@ -167,3 +169,4 @@ class DOIDictFileSystem(AbstractFileSystem):
 
 
 register_implementation("doi", DOIDictFileSystem)
+
