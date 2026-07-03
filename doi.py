@@ -9,7 +9,7 @@ from fsspec.registry import register_implementation
 
 
 class DOIDictFileSystem(AbstractFileSystem):
-    
+
     protocol = "doi"
 
     def __init__(self, doi=None, cache_dir=None, **kwargs):
