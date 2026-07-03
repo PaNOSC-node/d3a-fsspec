@@ -169,4 +169,3 @@ class DOIDictFileSystem(AbstractFileSystem):
 
 
 register_implementation("doi", DOIDictFileSystem)
-
