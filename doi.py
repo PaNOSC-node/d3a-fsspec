@@ -4,10 +4,12 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 import requests
-from fsspec import AbstractFileSystem, filesystem
+from fsspec import AbstractFileSystem
 from fsspec.registry import register_implementation
 
 class DOIDictFileSystem(AbstractFileSystem):
+
+    
     protocol = "doi"
 
     def __init__(self, doi=None, cache_dir=None, **kwargs):
@@ -41,7 +43,7 @@ class DOIDictFileSystem(AbstractFileSystem):
         root_xml = ET.fromstring(response.text)
         ns = {"ml": root_xml.tag.split("}")[0].strip("{")}
 
-        entries={}
+        entries = {}
         # get all URLs from doc
         for elem in root_xml.findall(".//ml:file", namespaces=ns):
             entries[elem.attrib['name']] = [url.text for url in elem.findall(".//ml:url", namespaces=ns)]
@@ -162,5 +164,6 @@ class DOIDictFileSystem(AbstractFileSystem):
     def list_cache(self):
         """List cached files (hashes only)."""
         return os.listdir(self.cache_dir)
+
 
 register_implementation("doi", DOIDictFileSystem)
