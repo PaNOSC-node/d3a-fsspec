@@ -185,10 +185,8 @@ def doi_shell(fs):
                         print("Unknown cache subcommand")
 
             else:
-                print(
-                    "Commands: ls, cd, pwd, cat,\
-                        head, info, get, cache, exit"
-                )
+                print("Commands: ls, cd, pwd, cat,\
+                        head, info, get, cache, exit")
 
         except (KeyboardInterrupt, EOFError):
             print()
