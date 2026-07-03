@@ -3,79 +3,97 @@ import os
 import tempfile
 import xml.etree.ElementTree as ET
 
-import fsspec
 import requests
+from fsspec import AbstractFileSystem
 from fsspec.registry import register_implementation
 
 
-def create_file(dir, name, url):
-    dir[name] = url
+class DOIDictFileSystem(AbstractFileSystem):
 
-
-def create_dir(dir, name):
-    new_directory = new_dir()
-    dir[name] = new_directory
-    return new_directory
-
-
-def dir_has_item(dir, name):
-    return name in dir
-
-
-def new_dir():
-    return {}
-
-
-def change_dir(dir, name):
-    return dir[name]
-
-
-def fetch_namespace_from_doi(doi):
-    accept_str = "application/metalink4+xml"
-    headers = {"Accept": accept_str}
-    response = requests.get(
-        f"https://doi.org/{doi}", headers=headers, allow_redirects=True
-    )
-
-    if accept_str not in response.headers.get("Content-Type", ""):
-        raise ValueError("No Metalink available")
-
-    root_xml = ET.fromstring(response.text)
-    ns = {"ml": root_xml.tag.split("}")[0].strip("{")}
-    urls = [url.text for url in root_xml.findall(".//ml:url", namespaces=ns)]
-    filenames = [
-        file_elem.attrib["name"]
-        for file_elem in root_xml.findall(".//ml:file", namespaces=ns)
-    ]
-
-    root_dir = new_dir()
-    counter = 0
-    for file in filenames:
-        parts = file.strip("/").split("/")
-        current_dir = root_dir
-        for i, item in enumerate(parts):
-            is_dir = i < len(parts) - 1
-            if is_dir:
-                if not dir_has_item(current_dir, item):
-                    create_dir(current_dir, item)
-                current_dir = change_dir(current_dir, item)
-            else:
-                create_file(current_dir, item, urls[counter])
-                counter += 1
-
-    return root_dir
-
-
-class DOIDictFileSystem(fsspec.AbstractFileSystem):
     protocol = "doi"
 
     def __init__(self, doi=None, cache_dir=None, **kwargs):
         super().__init__(**kwargs)
-        if doi is None:
-            raise ValueError("Must provide a DOI")
-        self.root_dir = fetch_namespace_from_doi(doi)
+
+        if not doi:
+            raise ValueError("Please provide a DOI.")
+        if not self.doi_is_valid(doi):
+            raise ValueError("Must provide a valid and resolvable DOI.")
+
+        self.root_dir = self.get_directories_from_doi(doi)
         self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
         os.makedirs(self.cache_dir, exist_ok=True)
+
+    @classmethod
+    def get_directories_from_doi(cls, doi):
+        # prepare request to doi.org
+        accept_str = "application/metalink4+xml"
+        headers = {"Accept": accept_str}
+        # send request.
+        # TODO: is this good or do we need another step to prepare and possibly parameterize the URL?
+        response = requests.get(
+            f"https://doi.org/{doi}", headers=headers, allow_redirects=True
+        )
+
+        # check if returned document is a metalink doc
+        if accept_str not in response.headers.get("Content-Type", ""):
+            raise ValueError("No Metalink available")
+
+        # parse XML file and set up namespace
+        root_xml = ET.fromstring(response.text)
+        ns = {"ml": root_xml.tag.split("}")[0].strip("{")}
+
+        entries = {}
+        # get all URLs from doc
+        for elem in root_xml.findall(".//ml:file", namespaces=ns):
+            entries[elem.attrib["name"]] = [
+                url.text for url in elem.findall(".//ml:url", namespaces=ns)
+            ]
+
+        # now set up hierarchical dict representing the directory structures
+        # with filenames after split paths and corresponding URLs to access them
+        root_dir = cls.new_dir()
+        for file in entries.keys():
+            parts = file.strip("/").split("/")
+            current_dir = root_dir
+            for i, item in enumerate(parts):
+                is_dir = i < len(parts) - 1
+                if is_dir:
+                    if not cls.dir_has_item(current_dir, item):
+                        cls.create_dir(current_dir, item)
+                    current_dir = cls.change_dir(current_dir, item)
+                else:
+                    cls.create_file(current_dir, item, entries[file][0])
+
+        return root_dir
+
+    @staticmethod
+    def doi_is_valid(doi):
+        url = f"https://doi.org/{doi}"
+        resp = requests.get(url)
+        return resp.ok
+
+    @staticmethod
+    def create_file(dir, name, url):
+        dir[name] = url
+
+    @classmethod
+    def create_dir(cls, dir, name):
+        new_directory = cls.new_dir()
+        dir[name] = new_directory
+        return new_directory
+
+    @staticmethod
+    def dir_has_item(dir, name):
+        return name in dir
+
+    @staticmethod
+    def new_dir():
+        return {}
+
+    @staticmethod
+    def change_dir(dir, name):
+        return dir[name]
 
     def _get_node(self, path):
         parts = path.strip("/").split("/") if path.strip("/") else []
