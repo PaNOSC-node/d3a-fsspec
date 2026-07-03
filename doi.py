@@ -7,8 +7,8 @@ import requests
 from fsspec import AbstractFileSystem
 from fsspec.registry import register_implementation
 
-class DOIDictFileSystem(AbstractFileSystem):
 
+class DOIDictFileSystem(AbstractFileSystem):
     
     protocol = "doi"
 
