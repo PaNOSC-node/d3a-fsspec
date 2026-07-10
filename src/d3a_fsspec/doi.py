@@ -5,7 +5,6 @@ import xml.etree.ElementTree as ET
 
 import requests
 from fsspec import AbstractFileSystem
-from fsspec.registry import register_implementation
 
 
 class DOIDictFileSystem(AbstractFileSystem):
@@ -166,6 +165,3 @@ class DOIDictFileSystem(AbstractFileSystem):
     def list_cache(self):
         """List cached files (hashes only)."""
         return os.listdir(self.cache_dir)
-
-
-register_implementation("doi", DOIDictFileSystem)
