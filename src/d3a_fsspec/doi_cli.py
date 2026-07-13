@@ -190,8 +190,12 @@ def doi_shell(fs):
 
 
 def main():
-    # Build the directory tree from DOI
-    fs = fsspec.filesystem("doi", doi=input("Please enter the DOI: "))
+    try:
+        # Build the directory tree from DOI
+        fs = fsspec.filesystem("doi", doi=input("Please enter the DOI: "))
+    except (KeyboardInterrupt, EOFError):
+        print()
+        return
 
     doi_shell(fs)
 
