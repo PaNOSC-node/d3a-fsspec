@@ -38,6 +38,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Installing the package causes setuptools-scm to call git to figure out the current version of the package.
+      # This happens after some files were already created by the installation. The call to git then fails as git
+      # introspection finds that some files have ownership issues. This setting circumvents that.
+      - name: Configure Git safe directory
+        run: |
+          git config --global --add safe.directory /__w/d3a-fsspec/d3a-fsspec
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
