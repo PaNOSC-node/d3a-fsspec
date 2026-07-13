@@ -47,3 +47,8 @@ jobs:
         run: |
           echo "Running unit testing"
           pytest unit_testing.py
+
+      # Make sure the program starts, then immediately send EOF to shut it down again
+      - name: Run the CLI program
+        run: |
+          : | d3a-cli
