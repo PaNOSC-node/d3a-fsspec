@@ -20,7 +20,7 @@ maintainers = [
 description = "An fsspec implementation that uses D3A to make data available for analysis"
 readme = "README.md"
 license = "Apache-2.0"
-license-files = ["LICENCSE"]
+license-files = ["LICENSE"]
 keywords = [
   # TODO
 ]
