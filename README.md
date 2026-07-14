@@ -56,3 +56,24 @@ Cached files:
 doi:/ChenShen-Grazingincidenceoffspeculardiffusescatteringmeasurementfromliquidsurfacesatfixedincidentangleanewmethodtoextractspecularreflectivity-3532648465850078741$ cache clear
 Cache cleared
 ```
+
+## Installation
+
+The `d3a-cli` program can be installed as a
+[standalone command line tool](https://packaging.python.org/en/latest/guides/installing-stand-alone-command-line-tools/)
+using, for example, `pipx` or `uv`
+
+```shell
+# install
+pipx install git+https://github.com/PaNOSC-node/d3a-fsspec.git
+# run
+d3a-cli
+```
+
+For development, install it into a virtual environment in editable mode:
+
+```shell
+python -m venv venv
+source venv/bin/activate
+python -m pip install -e .
+```
