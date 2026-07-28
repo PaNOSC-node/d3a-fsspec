@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "d3a-fsspec"
+dynamic = ["version"]
+dependencies = [
+  "requests",
+  "fsspec",
+  "prompt_toolkit",
+]
+requires-python = ">=3.11"
+authors = [
+  # TODO
+]
+maintainers = [
+  # TODO
+]
+description = "An fsspec implementation that uses D3A to make data available for analysis"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+keywords = [
+  # TODO
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.scripts]
+d3a-cli = "d3a_fsspec.doi_cli:main"
+
+[project.entry-points."fsspec.specs"]
+doi = "d3a_fsspec.doi.DOIDictFileSystem"
+
+[project.urls]
+Homepage = "https://github.com/PaNOSC-node/d3a-fsspec"
+Documentation = "https://github.com/PaNOSC-node/d3a-fsspec"
+Repository = "https://github.com/PaNOSC-node/d3a-fsspec.git"
+"Bug Tracker" = "https://github.com/PaNOSC-node/d3a-fsspec/issues"
+#Changelog = "https://github.com/PaNOSC-node/d3a-fsspec/blob/main/CHANGELOG.md"

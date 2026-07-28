@@ -1,15 +1,11 @@
 #! /usr/bin/env python
 import os
 
+import fsspec
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.shortcuts import print_formatted_text
-
-import doi
-
-# Build the directory tree from DOI
-fs = doi.filesystem("doi", doi=input("Please enter the DOI: "))
 
 
 class DOICompleter(Completer):
@@ -193,4 +189,16 @@ def doi_shell(fs):
             break
 
 
-doi_shell(fs)
+def main():
+    try:
+        # Build the directory tree from DOI
+        fs = fsspec.filesystem("doi", doi=input("Please enter the DOI: "))
+    except (KeyboardInterrupt, EOFError):
+        print()
+        return
+
+    doi_shell(fs)
+
+
+if __name__ == "__main__":
+    main()
