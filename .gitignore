@@ -5,6 +5,7 @@ __pycache__/
 __pycache__/*
 venv_doi/
 venv_doi/*
+venv-d3a-fsspec/
 metalinkExample.xml
 
 # Byte-compiled / optimized / DLL files

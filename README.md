@@ -73,7 +73,7 @@ d3a-cli
 For development, install it into a virtual environment in editable mode:
 
 ```shell
-python -m venv venv
-source venv/bin/activate
+python -m venv venv-d3a-fsspec
+source venv-d3a-fsspec/bin/activate
 python -m pip install -e .
 ```
