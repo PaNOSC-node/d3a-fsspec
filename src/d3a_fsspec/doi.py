@@ -80,7 +80,7 @@ class D3AFileSystem(AbstractFileSystem):
         for url in possible_urls:
             resp = requests.head(url, allow_redirects=True)
             if resp.ok:
-                return resp.url
+                return url
 
         return None
 
