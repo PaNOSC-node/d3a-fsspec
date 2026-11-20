@@ -40,7 +40,7 @@ classifiers = [
 d3a-cli = "d3a_fsspec.doi_cli:main"
 
 [project.entry-points."fsspec.specs"]
-doi = "d3a_fsspec.doi.DOIDictFileSystem"
+doi = "d3a_fsspec.doi.D3AFileSystem"
 
 [project.urls]
 Homepage = "https://github.com/PaNOSC-node/d3a-fsspec"
