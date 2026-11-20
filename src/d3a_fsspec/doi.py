@@ -8,8 +8,7 @@ import requests
 from fsspec import AbstractFileSystem
 
 
-class DOIDictFileSystem(AbstractFileSystem):
-
+class D3AFileSystem(AbstractFileSystem):
     protocol = "doi"
 
     def __init__(self, doi=None, cache_dir=None, **kwargs):
