@@ -2,6 +2,7 @@ import hashlib
 import os
 import tempfile
 import xml.etree.ElementTree as ET
+from urllib.parse import urlparse
 
 import requests
 from fsspec import AbstractFileSystem
@@ -15,24 +16,23 @@ class DOIDictFileSystem(AbstractFileSystem):
         super().__init__(**kwargs)
 
         if not doi:
-            raise ValueError("Please provide a DOI.")
-        if not self.doi_is_valid(doi):
-            raise ValueError("Must provide a valid and resolvable DOI.")
+            raise ValueError("Please provide an identifier.")
 
-        self.root_dir = self.get_directories_from_doi(doi)
+        url = self.resolve_identifier(doi)
+        if url is None:
+            raise ValueError("Must provide a valid and resolvable identifier.")
+
+        self.root_dir = self.get_directories_from_url(url)
         self.cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "doi_cache")
         os.makedirs(self.cache_dir, exist_ok=True)
 
     @classmethod
-    def get_directories_from_doi(cls, doi):
-        # prepare request to doi.org
+    def get_directories_from_url(cls, dataset_url):
         accept_str = "application/metalink4+xml"
         headers = {"Accept": accept_str}
         # send request.
         # TODO: is this good or do we need another step to prepare and possibly parameterize the URL?
-        response = requests.get(
-            f"https://doi.org/{doi}", headers=headers, allow_redirects=True
-        )
+        response = requests.get(dataset_url, headers=headers)
 
         # check if returned document is a metalink doc
         if accept_str not in response.headers.get("Content-Type", ""):
@@ -67,10 +67,23 @@ class DOIDictFileSystem(AbstractFileSystem):
         return root_dir
 
     @staticmethod
-    def doi_is_valid(doi):
-        url = f"https://doi.org/{doi}"
-        resp = requests.get(url)
-        return resp.ok
+    def resolve_identifier(identifier):
+        # check whether identifier is already a URL
+        parsed_url = urlparse(identifier)
+        if all([parsed_url.scheme, parsed_url.netloc, parsed_url.path]):
+            return identifier
+
+        # check possible identifier types
+        possible_urls = [
+            f"https://doi.org/{identifier}",
+            f"https://hdl.handle.net/{identifier}",
+        ]
+        for url in possible_urls:
+            resp = requests.head(url, allow_redirects=True)
+            if resp.ok:
+                return resp.url
+
+        return None
 
     @staticmethod
     def create_file(dir, name, url):
